@@ -57,8 +57,8 @@ Axlsx::Package.new do |p|
     [normal_style_hl] * 3 + [normal_style] * 3
 
   sheet.add_row [
-    "Service", "Id", "Date", "Resolved in", "Splunk Link", "Summary",
-    "TT Alert", "TT Respond", "TT Diagnose", "TT Recover", "Resolved By",
+    "Service", "Id", "Date", "Splunk Link", "Summary",
+    "TT Alert (m)", "TT Respond (m)", "TT Diagnose (m)", "TT Recover (m)", "Resolved By",
     "Root Cause", "Remediation", "Trello Card"], :style => header_style
 
   incidents = OffCall::PagerDuty.incidents(params)
@@ -74,7 +74,6 @@ Axlsx::Package.new do |p|
            i["service"]["name"],                            # Service
            %(=HYPERLINK("#{i["html_url"]}","#{i["id"]}")),  # Id
            opened,                                          # Date
-           ((closed - opened) / 60).round,                  # Resolved in
            %(=HYPERLINK("#{SPLUNK_SEARCH_URL + splunk_query}","10 minutes")) # Splunk Link
           ]
 
@@ -95,14 +94,14 @@ Axlsx::Package.new do |p|
       row_style = normal_row_style
     end
 
-    row << "" # TT Alert
-    row << "" # TT Respond 
-    row << "" # TT Diagnose 
-    row << "" # TT Recover
-    row << "" # Resolved By
-    row << "" # Root Cause
-    row << "" # Remediation
-    row << "" # Trello Card
+    row << ""                             # TT Alert
+    row << ""                             # TT Respond
+    row << ""                             # TT Diagnose 
+    row << ((closed - opened) / 60).round # TT Recover - TODO: Adjust by TT Alert
+    row << ""                             # Resolved By
+    row << ""                             # Root Cause
+    row << ""                             # Remediation
+    row << ""                             # Trello Card
 
     sheet.add_row row, :style => row_style
   end
