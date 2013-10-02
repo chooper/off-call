@@ -70,13 +70,14 @@ Axlsx::Package.new do |p|
       "search earliest=#{(opened- 5*60).strftime SPLUNK_TIMEFMT}" +
       " latest=#{(opened+ 5*60).strftime SPLUNK_TIMEFMT}")
     row = [
-           i["service"]["name"],
-           %(=HYPERLINK("#{i["html_url"]}","#{i["id"]}")),
-           opened,
-           ((closed - opened) / 60).round,
-           %(=HYPERLINK("#{SPLUNK_SEARCH_URL + splunk_query}","10 minutes"))
+           i["service"]["name"],                            # Service
+           %(=HYPERLINK("#{i["html_url"]}","#{i["id"]}")),  # Id
+           opened,                                          # Date
+           ((closed - opened) / 60).round,                  # Resolved in
+           %(=HYPERLINK("#{SPLUNK_SEARCH_URL + splunk_query}","10 minutes")) # Splunk Link
           ]
 
+    # Summary
     if i["trigger_summary_data"]
       if i["trigger_summary_data"]["description"]
         row << i["trigger_summary_data"]["description"]
@@ -85,7 +86,7 @@ Axlsx::Package.new do |p|
       end
     else
       row << i["incident_key"]
-    end
+    end # End Summary
 
     if i["number_of_escalations"].to_i > 0
       row_style = highlight_row_style
@@ -93,7 +94,11 @@ Axlsx::Package.new do |p|
       row_style = normal_row_style
     end
 
-    sheet.add_row row + [""] * 3, :style => row_style
+    row << "" # Root Cause
+    row << "" # Remediation
+    row << "" # Trello Card
+
+    sheet.add_row row, :style => row_style
   end
 
   widths = [5.times.map { 9 }, 35, 22, 22, 10].flatten
