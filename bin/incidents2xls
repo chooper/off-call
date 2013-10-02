@@ -58,6 +58,7 @@ Axlsx::Package.new do |p|
 
   sheet.add_row [
     "Service", "Id", "Date", "Resolved in", "Splunk Link", "Summary",
+    "TT Alert", "TT Respond", "TT Diagnose", "TT Recover", "Resolved By",
     "Root Cause", "Remediation", "Trello Card"], :style => header_style
 
   incidents = OffCall::PagerDuty.incidents(params)
@@ -94,6 +95,11 @@ Axlsx::Package.new do |p|
       row_style = normal_row_style
     end
 
+    row << "" # TT Alert
+    row << "" # TT Respond 
+    row << "" # TT Diagnose 
+    row << "" # TT Recover
+    row << "" # Resolved By
     row << "" # Root Cause
     row << "" # Remediation
     row << "" # Trello Card
