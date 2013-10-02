@@ -57,7 +57,7 @@ Axlsx::Package.new do |p|
     [normal_style_hl] * 3 + [normal_style] * 3
 
   sheet.add_row [
-    "Service", "Id", "Date", "Splunk Link", "Summary",
+    "Service", "Id", "Date", "Splunk Link", "Status Id", "Channel", "Summary",
     "TT Alert (m)", "TT Respond (m)", "TT Diagnose (m)", "TT Recover (m)", "Resolved By",
     "Root Cause", "Remediation", "Trello Card"], :style => header_style
 
@@ -76,6 +76,9 @@ Axlsx::Package.new do |p|
            opened,                                          # Date
            %(=HYPERLINK("#{SPLUNK_SEARCH_URL + splunk_query}","10 minutes")) # Splunk Link
           ]
+
+    row << "" # Status Id
+    row << "" # Channel
 
     # Summary
     if i["trigger_summary_data"]
