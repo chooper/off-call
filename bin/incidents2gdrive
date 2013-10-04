@@ -32,7 +32,6 @@ params = {
 SPLUNK_SEARCH_URL = "https://splunk.herokai.com/en-US/app/search/flashtimeline?q="
 SPLUNK_TIMEFMT = "%m/%d/%Y:%H:%M:%S"
 
-
 begin
   session = GoogleDrive.login(google_creds[:username], google_creds[:password])
   workbook = session.spreadsheet_by_key(spreadsheet_key)
@@ -55,18 +54,15 @@ begin
       "search earliest=#{(opened- 5*60).strftime SPLUNK_TIMEFMT}" +
       " latest=#{(opened+ 5*60).strftime SPLUNK_TIMEFMT}")
 
-    #   [ "Service", "Id", "Date", "SplunkLink", "StatusId", "Channel", "Summary",
-    #"TTAlert", "TTRespond", "TTDiagnose", "TTRecover", "ResolvedBy",
-    #"RootCause", "Remediation", "TrelloCard"
     row = {
-           "Service" => i["service"]["name"],                            # Service
-           "Id" => %(=HYPERLINK("#{i["html_url"]}","#{i["id"]}")),  # Id
-           "Date" => opened,                                          # Date
-           "SplunkLink" => %(=HYPERLINK("#{SPLUNK_SEARCH_URL + splunk_query}","10 minutes")) # Splunk Link
+           "Service"    => i["service"]["name"],
+           "Id"         => %(=HYPERLINK("#{i["html_url"]}","#{i["id"]}")),
+           "Date"       => opened,
+           "SplunkLink" => %(=HYPERLINK("#{SPLUNK_SEARCH_URL + splunk_query}","10 minutes"))
           }
 
-    row["StatusId"] =  "" # Status Id
-    row["Channel"] = "" # Channel
+    row["StatusId"]  = ""
+    row["Channel"]   = ""
 
     # Summary
     if i["trigger_summary_data"]
@@ -79,38 +75,18 @@ begin
       row["Summary"] = i["incident_key"]
     end # End Summary
 
-#    if i["number_of_escalations"].to_i > 0
-#      row_style = highlight_row_style
-#    else
-#      row_style = normal_row_style
-#    end
-
-    row["TTAlert"] = ""                             # TT Alert
-    row["TTRespond"] = ""                             # TT Alert
-    row["TTDiagnose"] = ""                             # TT Alert
-    row["TTRespond"] = ((closed - opened) / 60).round # TT Recover - TODO: Adjust by TT Alert
-    row["ResolvedBy"] = ""                             # Resolved By
-    row["RootCause"] = ""                             # Root Cause
-    row["Remediation"] = ""                             # Remediation
-    row["TrelloCard"] = ""                             # Trello Card
+    row["TTAlert"]      = ""
+    row["TTRespond"]    = ""
+    row["TTDiagnose"]   = ""
+    row["TTRespond"]    = ((closed - opened) / 60).round
+    row["ResolvedBy"]   = ""
+    row["RootCause"]    = ""
+    row["Remediation"]  = ""
+    row["TrelloCard"]   = ""
 
     # Push new row
     sheet.list.push row
   end
-
-  #widths = [5.times.map { 9 }, 35, 22, 22, 10].flatten
-  #sheet.column_widths *widths
-
-  # Freeze the header row
-  #sheet.sheet_view.pane do |pane|
-  #  pane.top_left_cell = "B1"
-  #  pane.state = :frozen
-  #  pane.y_split = 1
-  #  pane.active_pane = :bottom_right
-  #end
-
-  # Numbers interop
-  #p.use_shared_strings = true
-  #p.serialize("incidents.xls")
   sheet.save
+  puts "Saved to Google Drive"
 end
