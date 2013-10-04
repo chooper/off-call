@@ -42,7 +42,7 @@ begin
     "TTAlert", "TTRespond", "TTDiagnose", "TTRecover", "ResolvedBy",
     "RootCause", "Remediation", "TrelloCard"
   ]
-  sheet.list.keys = headers.map { |h| h.upcase }
+  sheet.list.keys = headers
   sheet.synchronize()
 
   incidents = OffCall::PagerDuty.incidents(params)
@@ -95,13 +95,7 @@ begin
     row["TrelloCard"] = ""                             # Trello Card
 
     # Push new row
-    new_row = {}
-    row.each do |k,v|
-      unless k.nil?
-        new_row[k.upcase] = v
-      end
-    end
-    sheet.list.push new_row
+    sheet.list.push row
   end
 
   #widths = [5.times.map { 9 }, 35, 22, 22, 10].flatten
