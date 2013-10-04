@@ -78,7 +78,7 @@ begin
     row["TTAlert"]      = ""
     row["TTRespond"]    = ""
     row["TTDiagnose"]   = ""
-    row["TTRespond"]    = ((closed - opened) / 60).round
+    row["TTRecover"]    = ((closed - opened) / 60).round
     row["ResolvedBy"]   = ""
     row["RootCause"]    = ""
     row["Remediation"]  = ""
