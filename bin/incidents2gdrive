@@ -1,0 +1,122 @@
+#!/usr/bin/env ruby
+# coding: utf-8
+
+require "./lib/off-call"
+require 'google_drive'
+require 'CGI'
+
+ENV.source ".env"
+
+OffCall::PagerDuty.connect(
+  ENV["PAGERDUTY_SUBDOMAIN"],
+  ENV["PAGERDUTY_USER"],
+  ENV["PAGERDUTY_PASSWORD"])
+
+google_creds = {
+  :username => ENV["GDRIVE_USERNAME"],
+  :password => ENV["GDRIVE_PASSWORD"]
+}
+spreadsheet_key = ENV["GDRIVE_SPREADSHEET"]
+
+services = ENV["SERVICES"].split(",") || abort(
+  "Must provide SERVICES=PXXXXXX,PYYYYYY")
+since = ENV["SINCE"].to_time rescue "Last Week".to_time
+until_ = ENV["UNTIL"].to_time rescue "Now".to_time
+
+params = {
+  :since => since.iso8601,
+  :until => until_.iso8601,
+  :service => services.join(",")
+}
+
+SPLUNK_SEARCH_URL = "https://splunk.herokai.com/en-US/app/search/flashtimeline?q="
+SPLUNK_TIMEFMT = "%m/%d/%Y:%H:%M:%S"
+
+
+begin
+  session = GoogleDrive.login(google_creds[:username], google_creds[:password])
+  workbook = session.spreadsheet_by_key(spreadsheet_key)
+  sheet = workbook.add_worksheet Time.now.strftime('%Y-%m-%d')
+
+  headers = [ "Service", "Id", "Date", "SplunkLink", "StatusId", "Channel", "Summary",
+    "TTAlert", "TTRespond", "TTDiagnose", "TTRecover", "ResolvedBy",
+    "RootCause", "Remediation", "TrelloCard"
+  ]
+  sheet.list.keys = headers.map { |h| h.upcase }
+  sheet.synchronize()
+
+  incidents = OffCall::PagerDuty.incidents(params)
+  puts "Found #{incidents.length} matching incidents."
+  incidents.each do |i|
+    opened = Time.parse(i["created_on"])
+    closed = Time.parse(i["last_status_change_on"])
+
+    splunk_query = CGI::escape(
+      "search earliest=#{(opened- 5*60).strftime SPLUNK_TIMEFMT}" +
+      " latest=#{(opened+ 5*60).strftime SPLUNK_TIMEFMT}")
+
+    #   [ "Service", "Id", "Date", "SplunkLink", "StatusId", "Channel", "Summary",
+    #"TTAlert", "TTRespond", "TTDiagnose", "TTRecover", "ResolvedBy",
+    #"RootCause", "Remediation", "TrelloCard"
+    row = {
+           "Service" => i["service"]["name"],                            # Service
+           "Id" => %(=HYPERLINK("#{i["html_url"]}","#{i["id"]}")),  # Id
+           "Date" => opened,                                          # Date
+           "SplunkLink" => %(=HYPERLINK("#{SPLUNK_SEARCH_URL + splunk_query}","10 minutes")) # Splunk Link
+          }
+
+    row["StatusId"] =  "" # Status Id
+    row["Channel"] = "" # Channel
+
+    # Summary
+    if i["trigger_summary_data"]
+      if i["trigger_summary_data"]["description"]
+        row["Summary"] = i["trigger_summary_data"]["description"]
+      else
+        row["Summary"] = i["trigger_summary_data"]["subject"]
+      end
+    else
+      row["Summary"] = i["incident_key"]
+    end # End Summary
+
+#    if i["number_of_escalations"].to_i > 0
+#      row_style = highlight_row_style
+#    else
+#      row_style = normal_row_style
+#    end
+
+    row["TTAlert"] = ""                             # TT Alert
+    row["TTRespond"] = ""                             # TT Alert
+    row["TTDiagnose"] = ""                             # TT Alert
+    row["TTRespond"] = ((closed - opened) / 60).round # TT Recover - TODO: Adjust by TT Alert
+    row["ResolvedBy"] = ""                             # Resolved By
+    row["RootCause"] = ""                             # Root Cause
+    row["Remediation"] = ""                             # Remediation
+    row["TrelloCard"] = ""                             # Trello Card
+
+    # Push new row
+    new_row = {}
+    row.each do |k,v|
+      unless k.nil?
+        new_row[k.upcase] = v
+      end
+    end
+    sheet.list.push new_row
+  end
+
+  #widths = [5.times.map { 9 }, 35, 22, 22, 10].flatten
+  #sheet.column_widths *widths
+
+  # Freeze the header row
+  #sheet.sheet_view.pane do |pane|
+  #  pane.top_left_cell = "B1"
+  #  pane.state = :frozen
+  #  pane.y_split = 1
+  #  pane.active_pane = :bottom_right
+  #end
+
+  # Numbers interop
+  #p.use_shared_strings = true
+  #p.serialize("incidents.xls")
+  sheet.save
+end

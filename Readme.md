@@ -32,6 +32,11 @@ The most important variables to set are:
  * **PAGERDUTY_PASSWORD** The password to use for authentication.
  * **SERVICES** The services defined in PagerDuty to operate on.
 
+There is also now (experimental) Google Drive support:
+
+* **GDRIVE_USERNAME** Your Google username
+* **GDRIVE_PASSWORD** Your Google password (use an application-specific password)
+* **GDRIVE_SPREADSHEET** The key of the spreadsheet to update, found in the URL
 
 ## report
 
