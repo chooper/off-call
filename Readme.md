@@ -7,6 +7,7 @@ It include the following commands:
  * `report` - Generate report of PagerDuty activity for a specific time
    range.
  * `incidents2xls` - Export listing of incidents into XLS format.
+ * `incidents2gdrive` - Export listing of incidents into Google Drive.
 
 ## Installation
 
@@ -32,7 +33,7 @@ The most important variables to set are:
  * **PAGERDUTY_PASSWORD** The password to use for authentication.
  * **SERVICES** The services defined in PagerDuty to operate on.
 
-There is also now (experimental) Google Drive support:
+There is also now Google Drive support:
 
 * **GDRIVE_USERNAME** Your Google username
 * **GDRIVE_PASSWORD** Your Google password (use an application-specific password)
@@ -72,3 +73,14 @@ Found 12 matching incidents.
 
 The file `incidents.xls` in the current direction will contain the
 exported XLS data.
+
+## incidents2gdrive
+
+Usage:
+
+```
+$ bundle exec bin/incidents2gdrive
+Found 12 matching incidents.
+$ open https://drive.google.com
+```
+
