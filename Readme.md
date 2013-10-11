@@ -36,7 +36,8 @@ The most important variables to set are:
 There is also now Google Drive support:
 
 * **GDRIVE_USERNAME** Your Google username
-* **GDRIVE_PASSWORD** Your Google password (use an application-specific password)
+* **GDRIVE_PASSWORD** Your Google password (use an
+  [application-specific password](https://accounts.google.com/b/0/IssuedAuthSubTokens?hl=en))
 * **GDRIVE_SPREADSHEET** The key of the spreadsheet to update, found in the URL
 
 ## report
